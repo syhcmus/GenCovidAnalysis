@@ -17,7 +17,7 @@ def transform(input_file, out_file = 'data/transformed_data.txt'):
 
         
             new_line = ' -1 '.join(gen_list)
-            new_line += ' -2'
+            new_line += ' -1 -2'
            
 
             new_lines.append(new_line)
