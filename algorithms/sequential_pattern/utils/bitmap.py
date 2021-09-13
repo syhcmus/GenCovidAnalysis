@@ -31,7 +31,7 @@ class bitmap():
 
     def get_sequence_index(self, bit_index, last_bits_index):
         sid = bisect(last_bits_index, bit_index)
-        
+
         if sid == len(last_bits_index):
             sid -= 1
 
@@ -63,19 +63,14 @@ class bitmap():
     def create_s_bitmap(self, bitmap_item, last_bits_index, bitmap_size):
 
         new_bitmap = bitmap(bitmap_size)
-
+        
         start_index = 0
-
         index = self.bit_arr.find(1,start_index)
-
-        print(self.bit_arr[:])        
+     
 
         while index >= 0:
 
             sid = self.get_sequence_index(index, last_bits_index)
-            print(index)
-            print(sid)
-            print("\n")
             last_bit_index_sequence = self.get_last_bit_index_sequence(sid,last_bits_index)
         
             is_find_match_sequence = False
