@@ -12,7 +12,7 @@ class bitmap():
         
 
 
-    def set_bit(self, sid, tid, last_bits_index):
+    def register_bit(self, sid, tid, last_bits_index):
 
         if sid == 0:
             index = tid
@@ -30,7 +30,12 @@ class bitmap():
         return self.bit_arr[index]
 
     def get_sequence_index(self, bit_index, last_bits_index):
-        return bisect(last_bits_index, bit_index)
+        sid = bisect(last_bits_index, bit_index)
+        
+        if sid == len(last_bits_index):
+            sid -= 1
+
+        return sid
 
     def get_support(self):
         return self.support
@@ -63,11 +68,14 @@ class bitmap():
 
         index = self.bit_arr.find(1,start_index)
 
-        
+        print(self.bit_arr[:])        
 
         while index >= 0:
 
             sid = self.get_sequence_index(index, last_bits_index)
+            print(index)
+            print(sid)
+            print("\n")
             last_bit_index_sequence = self.get_last_bit_index_sequence(sid,last_bits_index)
         
             is_find_match_sequence = False
