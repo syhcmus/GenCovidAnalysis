@@ -30,12 +30,13 @@ class bitmap():
         return self.bit_arr[index]
 
     def get_sequence_index(self, bit_index, last_bits_index):
-        sid = bisect(last_bits_index, bit_index)
 
-        if sid == len(last_bits_index):
-            sid -= 1
+        try:
+            return last_bits_index.index(bit_index)
+        except ValueError:
+            return bisect(last_bits_index, bit_index)
 
-        return sid
+
 
     def get_support(self):
         return self.support
@@ -117,33 +118,44 @@ class bitmap():
 if __name__ == '__main__':
 
 
-    a = [True,False,False,False,False,True,False,False,True,False,False,False]
-    b = [True,True,True,False,True,True,False,False,True,True,False,False]
+    # a = [True,False,False,False,False,True,False,False,True,False,False,False]
+    # b = [True,True,True,False,True,True,False,False,True,True,False,False]
 
 
-    last_bits_index = [3,7,11]
+    # last_bits_index = [3,7,11]
 
-    bitmap_size = 12
+    # bitmap_size = 12
 
-    bit_a = bitmap(bitmap_size)
-    bit_b = bitmap(bitmap_size)
+    # bit_a = bitmap(bitmap_size)
+    # bit_b = bitmap(bitmap_size)
 
-    for i in range(bitmap_size):
-        if a[i]:
-            bit_a.set_bit(i)
-        if b[i]:
-            bit_b.set_bit(i)
+    # for i in range(bitmap_size):
+    #     if a[i]:
+    #         bit_a.set_bit(i)
+    #     if b[i]:
+    #         bit_b.set_bit(i)
 
-    print(bit_a.bit_arr[:])
-    print(bit_b.bit_arr[:])
+    # print(bit_a.bit_arr[:])
+    # print(bit_b.bit_arr[:])
 
 
     
-    new_s_bitmap = bit_a.create_s_bitmap(bit_b,last_bits_index,bitmap_size)
+    # new_s_bitmap = bit_a.create_s_bitmap(bit_b,last_bits_index,bitmap_size)
 
-    new_i_bitmap = bit_a.create_i_bitmap(bit_b,last_bits_index,bitmap_size)
+    # new_i_bitmap = bit_a.create_i_bitmap(bit_b,last_bits_index,bitmap_size)
 
-    print(new_s_bitmap.get_support())
+    # print(new_s_bitmap.get_support())
+
+    last_bits_index = [3,7,11]
+    bit = 1
+    index = -1
+   
+    try:
+        index = last_bits_index.index(bit)
+    except ValueError:
+        index = bisect(last_bits_index,bit)
+    
+    print(index)
 
 
 
