@@ -38,6 +38,23 @@ class bitmap():
         except ValueError:
             return bisect(last_bits_index, bit_index)
 
+        # left = 0
+        # right = len(last_bits_index) - 1
+        
+
+        # while right >= left:
+            
+        #     mid = (left+right)//2
+
+        #     if last_bits_index[mid] == bit_index:
+        #         return mid
+        #     elif last_bits_index[mid] > bit_index:
+        #         right = mid -1
+        #     else:
+        #         left = mid + 1
+            
+        # return left
+
 
 
     def get_support(self):
@@ -52,10 +69,10 @@ class bitmap():
 
     def get_sequences_index(self, last_bits_index):
 
-        indexes = []
+        indexes = set()
 
         for bit_index in self.bit_arr.search(1):
-            indexes.append(self.get_sequence_index(bit_index, last_bits_index))
+            indexes.add(self.get_sequence_index(bit_index, last_bits_index))
 
         return indexes
 
@@ -119,7 +136,6 @@ class bitmap():
 
 if __name__ == '__main__':
 
-
     a = [True,False,False,False,False,True,False,False,True,False,False,False]
     b = [True,True,True,False,True,True,False,False,True,True,False,False]
 
@@ -147,6 +163,7 @@ if __name__ == '__main__':
     new_i_bitmap = bit_a.create_i_bitmap(bit_b,last_bits_index,bitmap_size)
 
     print(new_s_bitmap.bit_arr[:])
+
 
 
 
