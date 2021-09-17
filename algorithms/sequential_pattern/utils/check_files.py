@@ -1,5 +1,5 @@
 
-f1 = open("data/output2.txt", "r")
+f1 = open("data/output.txt", "r")
 f2 = open("data/output1.txt", "r")
 
 lines1 = f1.readlines()

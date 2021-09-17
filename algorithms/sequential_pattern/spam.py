@@ -110,13 +110,13 @@ class spam():
                 s_temp_bitmap.append(new_bitmap)
 
         for item,new_bitmap in zip(s_temp,s_temp_bitmap):
-            new_prefix = prefix_item.clone()
-            new_prefix.add_itemset(itemset(item))
 
-            if new_bitmap.get_support() >= self.minsup:
+            # if new_bitmap.get_support() >= self.minsup:
+
+                new_prefix = prefix_item.clone()
+                new_prefix.add_itemset(itemset(item))
 
                 self.save_pattern(new_prefix,new_bitmap)
-
 
                 self.prune(new_prefix,new_bitmap,s_temp,s_temp,item,size+1)
 
@@ -133,6 +133,7 @@ class spam():
                 if new_bitmap.get_support() >= self.minsup:
                     i_temp.append(item)
                     i_temp_bitmap(new_bitmap)
+
 
         for item,new_bitmap in zip(i_temp,i_temp_bitmap):
             new_prefix = prefix_item.clone()
