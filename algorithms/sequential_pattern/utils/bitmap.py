@@ -33,27 +33,22 @@ class bitmap():
 
     def get_sequence_index(self, bit_index, last_bits_index):
 
-        try:
-            return last_bits_index.index(bit_index)
-        except ValueError:
-            return bisect(last_bits_index, bit_index)
-
-        # left = 0
-        # right = len(last_bits_index) - 1
+        left = 0
+        right = len(last_bits_index) - 1
         
 
-        # while right >= left:
+        while right >= left:
             
-        #     mid = (left+right)//2
+            mid = (left+right)//2
 
-        #     if last_bits_index[mid] == bit_index:
-        #         return mid
-        #     elif last_bits_index[mid] > bit_index:
-        #         right = mid -1
-        #     else:
-        #         left = mid + 1
+            if last_bits_index[mid] == bit_index:
+                return mid
+            elif last_bits_index[mid] > bit_index:
+                right = mid -1
+            else:
+                left = mid + 1
             
-        # return left
+        return left
 
 
 

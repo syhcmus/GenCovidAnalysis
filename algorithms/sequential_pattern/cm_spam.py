@@ -60,6 +60,8 @@ class cmspam():
 
             self.minsup = math.ceil(minsup * len(self.last_bits_index))
 
+            print(self.minsup)
+
             sid = 0
             tid = 0
 
@@ -96,6 +98,7 @@ class cmspam():
                 else:
                     del self.vertical_db[item]
 
+            # cmap
 
             for transaction in horizontal_db:
                 already_processed = set()
@@ -103,6 +106,7 @@ class cmspam():
 
                 for i in range(len(transaction)):
                     item = transaction[i]
+
                     i_set = i_processed.get(item,None)
                     if i_set == None:
                         i_set = set()
@@ -115,7 +119,7 @@ class cmspam():
                     if bitmap_item == None or bitmap_item.get_support() < self.minsup:
                         continue
 
-                    already_processed_B = set()
+                    already_processed_item = set()
 
                     same_item_set = True
                     for j in range(i+1,len(transaction)):
@@ -144,7 +148,9 @@ class cmspam():
                                     support += 1
                                     cmap[item_j] = support
 
-                        elif item_j not in already_processed_B:
+                                i_set.add(item_j)
+
+                        elif item_j not in already_processed_item:
 
                             if item in already_processed:
                                 break
@@ -161,7 +167,7 @@ class cmspam():
                                 support += 1
                                 cmap[item_j] = support
 
-                            already_processed_B.add(item_j)
+                            already_processed_item.add(item_j)
                     
                     already_processed.add(item)
             
@@ -208,12 +214,9 @@ class cmspam():
             new_prefix = prefix_item.clone()
             new_prefix.add_itemset(itemset(item))
 
-            if new_bitmap.get_support() >= self.minsup:
+            self.save_pattern(new_prefix,new_bitmap)
 
-                self.save_pattern(new_prefix,new_bitmap)
-
-
-                self.prune(new_prefix,new_bitmap,s_temp,s_temp,item,size+1, item)
+            self.prune(new_prefix,new_bitmap,s_temp,s_temp,item,size+1, item)
 
         # I-step
 
@@ -257,7 +260,7 @@ class cmspam():
         result = ""
         
         if isinstance(pattern, int):
-            result = f"{pattern} -1 #SUP: {bitmap.get_support()}"
+            result = f"{pattern} -1 #SUP: {bitmap.get_support()}\n"
         elif isinstance(pattern,prefix):
             for itemset in pattern.get_itemsets():
                 for item in itemset.get_items():
@@ -265,13 +268,8 @@ class cmspam():
                 
                 result += "-1 "
 
-            result += f"#SUP: {bitmap.get_support()}"
+            result += f"#SUP: {bitmap.get_support()}\n"
 
-        
-
-        sequences_index = " ".join([str(x) for x in bitmap.get_sequences_index(self.last_bits_index)])
-
-        result += f" #SID: {sequences_index}\n"
 
         self.fout.write(result)
 
@@ -282,10 +280,10 @@ if __name__ == '__main__':
     
     start_time = time.time()
 
-    input = 'data/input.txt'
+    input = 'data/transformed_data.txt'
     output = 'data/output1.txt'
     s = cmspam()
-    s.run(input,output,0.5)
+    s.run(input,output,0.98)
     run_time = (time.time() - start_time) * 1000
     
     print(f"--- {run_time} ms ---" )
