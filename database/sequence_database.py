@@ -1,11 +1,15 @@
-from database.sequence import sequence
+from sequence import sequence
+import os
+import sys
 
+sys.path.insert(1, './..')
 
 class sequence_database:
     
     def __init__(self):
         self.sequences = []
         self.size = 0
+        self.num_itemset = 0
 
     def load_data(self, input):
         with open(input, 'r') as fin:
@@ -26,6 +30,7 @@ class sequence_database:
 
         for token in tokens:
             if token == '-1':
+                self.num_itemset += 1
                 seq.add_itemset(itemset)
                 itemset = []
             elif token == '-2':
@@ -38,6 +43,9 @@ class sequence_database:
 
     def get_size(self):
         return self.size
+
+    def get_itemset_size(self):
+        return self.num_itemset
 
 
 
