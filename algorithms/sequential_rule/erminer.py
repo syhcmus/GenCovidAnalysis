@@ -2,12 +2,16 @@
 # importing sys
 import sys
 import math
+import time
 
-sys.path.insert(1, './../..')
+import os
+parentDir=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+newPath=os.path.join(parentDir, 'database')
+sys.path.append(newPath)
   
 
 
-from database.sequence_database import sequence_database
+from sequence_database import sequence_database
 from utils.occurence import occurence
 from utils.sparse_matrix import sparse_matrix
 from utils.equivalent_class import equivalent_class
@@ -23,7 +27,7 @@ class erminer:
         self.minconf = 0
         self.map_item = {}
         self.matrix = sparse_matrix()
-        self.store = left_store()
+        self.left_store = left_store()
         self.fout = None
         
         
@@ -43,8 +47,6 @@ class erminer:
         self.generate_sparse_matrix(self.database)
         
 
-
-
         left_eclass = {}
         right_eclass = {}
 
@@ -54,7 +56,6 @@ class erminer:
 
             item_i = items_i[0]
             occurence_i = self.map_item[item_i]
-            tid_i = occurence_i.keys()
 
             for items_j in items_i[1].items():
 
@@ -66,8 +67,6 @@ class erminer:
 
                 tid_ij = set()
                 tid_ji = set()
-
-                
 
                 if len(occurence_i) < len(occurence_j):
                     self.cal_tid(occurence_i, occurence_j, tid_ij, tid_ji)
@@ -82,31 +81,26 @@ class erminer:
                     itemset_i = [item_i]
                     itemset_j = [item_j]
 
-                    tid_j = occurence_j.keys()
 
                     if conf_ij >= min_conf:
                         self.save_rule(tid_ij, conf_ij, itemset_i, itemset_j)
 
-                    self.register_rule(item_i, tid_i, occurence_i, tid_ij, item_j, tid_j, occurence_j, left_eclass, right_eclass )
+                    self.register_rule(item_i, occurence_i, tid_ij, item_j, occurence_j, left_eclass, right_eclass )
 
                 
                 count_ji = len(tid_ji)
 
                 if count_ji >= self.minsup:
 
-
-
                     conf_ji = count_ji / len(occurence_j)
 
                     itemset_i = [item_i]
                     itemset_j = [item_j]
 
-                    tid_j = occurence_j.keys()
-
                     if conf_ji >= min_conf:
                         self.save_rule(tid_ji, conf_ji, itemset_j, itemset_i)
 
-                    self.register_rule(item_j, tid_j, occurence_j, tid_ji, item_i, tid_i, occurence_i, left_eclass, right_eclass )                
+                    self.register_rule(item_j, occurence_j, tid_ji, item_i, occurence_i, left_eclass, right_eclass )                
             
         
 
@@ -127,7 +121,7 @@ class erminer:
             self.expand_right(r_eclass)
 
 
-        for e_map in self.store.get_store().values():
+        for e_map in self.left_store.get_store().values():
             for e_list in e_map.values():
                 for e_class in e_list:
                     if len(e_class.get_rules()) > 1:
@@ -144,14 +138,10 @@ class erminer:
         for sid in range(database.get_size()):
             seq = database.get_sequences()[sid]
 
-          
-
             for tid in range(seq.get_size()):
                 itemset = seq.get_itemset(tid)
 
                 for item in itemset:
-
-                    
 
                     occurs = self.map_item.get(item, None)
 
@@ -240,7 +230,10 @@ class erminer:
         self.fout.write(rule)
 
 
-    def register_rule(self, item_i, tid_i, occurence_i, tid_ij, item_j, tid_j, occurence_j, l_eclass, r_eclass):
+    def register_rule(self, item_i, occurence_i, tid_ij, item_j, occurence_j, l_eclass, r_eclass):
+        tid_i = occurence_i.keys()
+        tid_j = occurence_j.keys()
+
         left_class = l_eclass.get(item_j, None)
         if left_class == None:
             left_class = equivalent_class([item_j], tid_j, occurence_j )
@@ -248,6 +241,8 @@ class erminer:
 
         l_rule = left_rule([item_i], tid_i, tid_ij)
         left_class.add_rule(l_rule)
+
+        
 
         right_class = r_eclass.get(item_i, None)
         if right_class == None:
@@ -423,16 +418,24 @@ class erminer:
 
                     rules.add_rule(r_rule)
 
-                    
-
                     l_rule = left_rule(right_eclass.get_itemset(), right_eclass.get_tid(), tid_i_jc)
-                    self.store.add_rule(l_rule,itemset_jc,tid_jc, occurence_jc)
+                    self.left_store.add_rule(l_rule,itemset_jc,tid_jc, occurence_jc)
 
             if len(rules.get_rules()):
                 self.expand_right(rules)
 
 if __name__ == '__main__':
 
+
+    start_time = time.time()
+
+    newPath=os.path.join(parentDir, 'data') 
+    input = os.path.join(newPath, 'input.txt') # data.input.txt
+    output = os.path.join(newPath, 'output.txt') # data/output.txt
+
     erm = erminer()
-    erm.run("./../../data/input.txt","./../../data/output.txt",0.5,0.5)
+    erm.run(input,output,0.5,0.5)
+    run_time = (time.time() - start_time) * 1000
+    
+    print(f"--- {run_time} ms ---" )
 
