@@ -9,10 +9,14 @@ sys.path.append(newPath)
 
 from sequence_database import *
 
+import time
+
 
 from utils.bitmap import bitmap
 from utils.prefix import prefix
 from pattern.itemset import itemset
+
+
 
 class cmspam():
 
@@ -40,59 +44,6 @@ class cmspam():
 
         self.fout = open(output, "w")
         
-
-        # fin = open(input,'r')
-        # lines = fin.read().splitlines()
-
-        # bit_index = -1
-
-        # horizontal_db = []
-
-        # for line in lines:
-        #     if len(line):
-            
-        #         transaction = []
-                
-        #         for token in line.split(" "):
-                    
-        #             transaction.append(int(token))
-
-        #             if token == '-1':
-        #                 bit_index += 1
-
-        #         horizontal_db.append(transaction)
-
-        #         self.last_bits_index.append(bit_index)
-
-        # self.bitmap_size = bit_index + 1
-
-        # sid = 0
-        # tid = 0
-
-        # for line in lines:
-        #     if len(line):
-
-        #         for token in line.split(" "):
-        #             if token == "-1":
-        #                 tid += 1
-        #             elif token == "-2":
-        #                 sid += 1
-        #                 tid = 0
-        #             else:
-        #                 item = int(token)
-
-        #                 bitmap_item = self.vertical_db.get(item, None)
-        #                 if bitmap_item == None:
-        #                     bitmap_item = bitmap(self.bitmap_size)
-        #                     self.vertical_db[item] = bitmap_item
-
-        #                 bitmap_item.register_bit(sid,tid,self.last_bits_index)
-
-            
-            
-        # fin.close()
-
-        # self.minsup = math.ceil(minsup * len(self.last_bits_index))
 
         self.database.load_data(input)
         self.bitmap_size = self.database.get_itemset_size()
@@ -131,6 +82,7 @@ class cmspam():
                 del self.vertical_db[item]
 
         # cmap
+
 
         for seq in self.database.get_sequences():
             already_processed = set()
@@ -211,10 +163,12 @@ class cmspam():
 
     def prune(self, prefix_item, bitmap, s_items, i_items, considering_item, size, last_appended_item):
 
+        self.count += 1
+        print(self.count)
 
         # S-step
-        s_temp = []
-        s_temp_bitmap = []   
+        s_temp = {}
+        # s_temp_bitmap = []   
 
         map_support_s = self.cmap_s.get(last_appended_item,None)
 
@@ -228,27 +182,28 @@ class cmspam():
             if support == None or support < self.minsup:
                 continue
 
+            new_bitmap = bitmap.create_s_bitmap(self.vertical_db[item], self.last_bits_index, self.bitmap_size)
 
-
-
-            new_bitmap = bitmap.create_s_bitmap(self.vertical_db[item], self.last_bits_index, self.bitmap_size)     
 
             if(new_bitmap.get_support() >= self.minsup):
-                s_temp.append(item)
-                s_temp_bitmap.append(new_bitmap)
+                s_temp[item] = new_bitmap
 
-        for item,new_bitmap in zip(s_temp,s_temp_bitmap):
+
+
+        for item,new_bitmap in s_temp.items():
             new_prefix = prefix_item.clone()
             new_prefix.add_itemset(itemset(item))
 
             self.save_pattern(new_prefix,new_bitmap)
 
-            self.prune(new_prefix,new_bitmap,s_temp,s_temp,item,size+1, item)
+        
+            self.prune(new_prefix,new_bitmap,s_temp.keys(),s_temp.keys(),item,size+1, item)
+
 
         # I-step
 
-        i_temp = []
-        i_temp_bitmap = []
+        i_temp = {}
+        # i_temp_bitmap = []
 
         map_support_i = self.cmap_i.get(last_appended_item,None)
 
@@ -270,16 +225,15 @@ class cmspam():
                 new_bitmap = bitmap.create_i_bitmap(self.vertical_db[item], self.last_bits_index, self.bitmap_size)
 
                 if new_bitmap.get_support() >= self.minsup:
-                    i_temp.append(item)
-                    i_temp_bitmap(new_bitmap)
+                    i_temp[item] = new_bitmap
 
-        for item,new_bitmap in zip(i_temp,i_temp_bitmap):
+        for item,new_bitmap in i_temp.items():
             new_prefix = prefix_item.clone()
             new_prefix.get_itemset(len(prefix_item) - 1).add_item(item)
 
             self.save_pattern(new_prefix,new_bitmap)
 
-            self.prune(new_prefix,new_bitmap,s_temp,i_temp,item,size+1)
+            self.prune(new_prefix,new_bitmap,s_temp.keys(),i_temp.keys(),item,size+1)
 
 
     def save_pattern(self,pattern, bitmap):
@@ -312,7 +266,7 @@ if __name__ == '__main__':
     output = os.path.join(newPath, 'output1.txt') # data/output1.txt
 
     s = cmspam()
-    s.run(input,output,0.5)
+    s.run("/home/sy/Desktop/project/GenCovidAnalysis/data/transformed_data.txt",output,0.98)
     run_time = (time.time() - start_time) * 1000
     
     print(f"--- {run_time} ms ---" )

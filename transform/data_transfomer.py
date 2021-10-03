@@ -31,7 +31,7 @@ def transform(input_file, out_file = 'data/transformed_data.txt'):
 
 if __name__ == '__main__':            
 
-    input_file = "data/MT291827.txt"
+    input_file = "/home/sy/Desktop/project/GenCovidAnalysis/data/MT745584.txt"
 
     transform(input_file=input_file)
 
