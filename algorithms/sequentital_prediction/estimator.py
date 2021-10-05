@@ -36,7 +36,7 @@ class estimator:
 
         self.database.shuffle()
 
-        stats_cols = ["success", "failure", "no match", "overall"]
+        stats_cols = ["success", "failure", "overall"]
 
         self.stats = statistic_logger(stats_cols, predictor_tags )
 
@@ -76,10 +76,7 @@ class estimator:
                 predict = self.predictors[classifier_id].predict(final_target)
                 
 
-                if predict.get_size() == 0:
-                    self.stats.increase("no match", predicttor_name)
-
-                elif(self.is_success(consequence,predict)):
+                if self.is_success(consequence,predict):
                     self.stats.increase("success", predicttor_name)
 
                 else:

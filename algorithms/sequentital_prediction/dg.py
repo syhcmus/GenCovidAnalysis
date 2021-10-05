@@ -44,7 +44,7 @@ class dg_node:
         return self.total_support
 
 
-    def update_or_add_arc(self,target):
+    def update_arc(self,target):
         is_found = False
         for arc in self.arcs:
             if arc.get_dest() == target:
@@ -92,7 +92,7 @@ class dg(preidctor_base):
 
                 k = i + 1
                 while k < i+1+window_size and k < len(items):
-                    node.update_or_add_arc(items[k])
+                    node.update_arc(items[k])
 
                     k += 1
 

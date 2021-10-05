@@ -20,24 +20,6 @@ class statistic_logger:
         result = ""
 
         if self.use_steps == False:
-            # result += "\t\t"
-            # for algo in self.algorithms:
-            #     result += "" + algo.get_name() + "\t"
-
-            # result += "\n"
-
-            # for stat in self.stats_name:
-            #     if len(stat) < 9:
-            #         result += stat + "\t"
-            #     else:
-            #         result += stat[:9]
-
-            #     for algo in self.algorithms:
-            #         value = algo.get(stat) * 100
-            #         result += "\t" + str(value)
-                
-            #     result += "\n"
-
 
             for algo in self.algorithms:
                 result += f"---------  {algo.get_name()}  --------- \n"
@@ -47,8 +29,7 @@ class statistic_logger:
 
                     result += f"{stat} \t {value}% \n"
 
-
-                result += "\n"
+                result += "\n\n"
 
         return result
                 
