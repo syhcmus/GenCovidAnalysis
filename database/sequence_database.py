@@ -1,4 +1,3 @@
-from time import perf_counter
 from sequence import sequence
 import os
 import sys
@@ -13,6 +12,7 @@ class sequence_database:
         self.size = 0
         self.num_itemset = 0
         self.max_count = max_count
+        self.map_item_count = {}
 
     def load_data(self, input):
         with open(input, 'r') as fin:
@@ -35,8 +35,14 @@ class sequence_database:
         for token in tokens:
             token = token.strip()
             if len(token) > 0:
-                if int(token) > 0:
-                    seq.add_itemset(int(token))
+                item = int(token)
+                if item > 0:
+                    seq.add_itemset(item)
+                    count = self.map_item_count.get(item, None)
+                    if count == None:
+                        self.map_item_count[item] = 1
+                    else:
+                        self.map_item_count[item] = count + 1
         
         self.sequences.append(seq)
         self.num_itemset += 1
@@ -46,7 +52,8 @@ class sequence_database:
         random.shuffle(self.sequences)
 
 
-
+    def get_map_item_count(self):
+        return self.map_item_count
 
 
     def add_sequence(self, tokens):
