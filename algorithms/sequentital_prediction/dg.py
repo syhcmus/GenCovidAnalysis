@@ -65,19 +65,19 @@ class dg(preidctor_base):
     
    
     
-    def __init__(self):
+    def __init__(self, look_ahead=4):
         super().__init__()
         self.map_node = {}
         self.parameters = paramable()
         self.tag = "DG"
-        self.look_ahead = 4
+        self.look_ahead = look_ahead
 
     def set_params(self, params):
         self.parameters = params
 
     def train(self, sequences):
         
-        window_size = self.parameters.get_int_or_default_param("lookahead", self.look_ahead)
+        window_size = self.look_ahead
 
         for seq in sequences:
 

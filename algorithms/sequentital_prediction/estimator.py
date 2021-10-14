@@ -3,6 +3,8 @@
 import os
 import sys
 from dg import dg
+from akom import akom
+
 parentDir=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 newPath=os.path.join(parentDir, 'database')
 sys.path.append(newPath)
@@ -173,6 +175,7 @@ if __name__ == "__main__":
     
     est = estimator(input)
     est.add_pridictor(dg())
+    est.add_pridictor(akom())
 
     est.run(sample_type="kfold", param=10)
     # est.run(sample_type="holdout", param=0.8)

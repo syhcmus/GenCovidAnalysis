@@ -181,8 +181,7 @@ class apriori:
             if is_found == False:
                 return False
 
-            
-        return True
+        
             
 
 
@@ -204,6 +203,7 @@ class apriori:
 
         
         return 0
+        
 
     def save_itemset(self, item, support):
         self.fout.write(f"{item} #SUP: {support}\n")
