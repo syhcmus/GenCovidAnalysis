@@ -113,6 +113,8 @@ class erminer:
                 self.expand_left(l_eclass)
 
 
+        right_eclass = dict(sorted(right_eclass.items()))
+
         for r_eclass in right_eclass.values():
 
             if len(r_eclass.get_rules()) > 1:
@@ -125,8 +127,7 @@ class erminer:
             for e_list in e_map.values():
                 for e_class in e_list:
                     if len(e_class.get_rules()) > 1:
-                        e_class.set_rules(sorted(e_class, key= lambda e: e.get_itemset()[-1]))
-
+                        e_class.set_rules(sorted(e_class.get_rules(), key= lambda e: e.get_itemset()[-1]))
                         self.expand_left(e_class)
 
         self.fout.close()
@@ -430,7 +431,7 @@ if __name__ == '__main__':
     start_time = time.time()
 
     newPath=os.path.join(parentDir, 'data') 
-    input = os.path.join(newPath, 'MT745584TKS,CM-SPAM,ERMIER,PM.txt') 
+    input = os.path.join(newPath, 'transformed_data.txt') 
     output = os.path.join(newPath, 'output.txt') # data/output.txt
 
     erm = erminer()

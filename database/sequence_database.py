@@ -23,6 +23,7 @@ class sequence_database:
                 if len(line):
                     if self.max_count == 0:
                         seq = self.add_sequence(line.strip().split(" "),seq)
+                        # self.add_sequence(line.strip().split(" "))
                     elif self.size < self.max_count:
                         self.add_truncated_sequence(line.strip().split(" "))
 
@@ -60,6 +61,7 @@ class sequence_database:
     def add_sequence(self, tokens, seq=None):
         if seq == None:
             seq = sequence()
+
 
         itemset = []
 

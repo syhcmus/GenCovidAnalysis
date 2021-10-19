@@ -25,7 +25,7 @@ class left_store:
             eclass.add_rule(rule)
         else:
             for eclass in l:
-                if eclass.get_itemset == itemset:
+                if eclass.get_itemset() == itemset:
                     eclass.add_rule(rule)
                     return
         
