@@ -430,7 +430,7 @@ if __name__ == '__main__':
     start_time = time.time()
 
     newPath=os.path.join(parentDir, 'data') 
-    input = os.path.join(newPath, 'input.txt') # data.input.txt
+    input = os.path.join(newPath, 'MT745584TKS,CM-SPAM,ERMIER,PM.txt') 
     output = os.path.join(newPath, 'output.txt') # data/output.txt
 
     erm = erminer()

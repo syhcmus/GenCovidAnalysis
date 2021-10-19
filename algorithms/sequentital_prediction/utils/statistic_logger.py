@@ -1,5 +1,4 @@
 
-from utils.profile import profile
 from utils.algorithm import algorithm
 
 class statistic_logger:

@@ -66,8 +66,6 @@ class cmspam():
         self.minsup = math.ceil(minsup * self.database.get_size())
 
 
-        
-    
         self.vertical_db = dict(sorted(self.vertical_db.items()))
 
         frequent_items = []
@@ -163,8 +161,6 @@ class cmspam():
 
     def prune(self, prefix_item, bitmap, s_items, i_items, considering_item, size, last_appended_item):
 
-        self.count += 1
-        print(self.count)
 
         # S-step
         s_temp = {}

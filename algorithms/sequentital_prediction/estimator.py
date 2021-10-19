@@ -4,22 +4,24 @@ import os
 import sys
 from dg import dg
 from akom import akom
+from cpt import cpt
 
 parentDir=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 newPath=os.path.join(parentDir, 'database')
 sys.path.append(newPath)
 
 from sequence_database import sequence_database
-from utils.profile import profile
 from utils.statistic_logger import statistic_logger
 
 class estimator:
 
-    def __init__(self, input, max_count=500):
+    def __init__(self, input, max_count=500, consequent_size=1,window_size=5):
         self.predictors = []
         self.database = sequence_database(max_count)
         self.stats = None
         self.input = input
+        self.consequence_size = consequent_size
+        self.window_size = window_size
         
 
 
@@ -65,8 +67,8 @@ class estimator:
 
     def predict(self, test_set, classifier_id):
         for target in test_set:
-            conseq_size = profile.get_int_param("consequent_size")
-            window_size = profile.get_int_param("window_size")   
+            conseq_size = self.consequence_size
+            window_size = self.window_size
 
             predicttor_name = self.predictors[classifier_id].get_tag()
 
@@ -171,11 +173,12 @@ class estimator:
 if __name__ == "__main__":
 
     newPath=os.path.join(parentDir, 'data') 
-    input = os.path.join(newPath, 'transformed_data.txt') # data/input.txt
+    input = os.path.join(newPath, 'transformed_data.txt') 
     
     est = estimator(input)
     est.add_pridictor(dg())
     est.add_pridictor(akom())
+    est.add_pridictor(cpt())
 
     est.run(sample_type="kfold", param=10)
     # est.run(sample_type="holdout", param=0.8)

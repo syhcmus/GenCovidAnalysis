@@ -6,7 +6,6 @@ newPath=os.path.join(parentDir, 'database')
 sys.path.append(newPath)
 
 from predictor_base import preidctor_base
-from utils.paramable import paramable
 from sequence import sequence
 
 class markov_state:
@@ -49,7 +48,6 @@ class akom(preidctor_base):
         super().__init__()
         self.k = k
         self.tag = "AKOM"
-        self.parameters = paramable()
         self.map_node = {}
 
 

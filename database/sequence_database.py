@@ -17,13 +17,14 @@ class sequence_database:
     def load_data(self, input):
         with open(input, 'r') as fin:
             lines = fin.read().splitlines()
+            seq = None
 
             for line in lines:
                 if len(line):
                     if self.max_count == 0:
-                        self.add_sequence(line.split(" "))
+                        seq = self.add_sequence(line.strip().split(" "),seq)
                     elif self.size < self.max_count:
-                        self.add_truncated_sequence(line.split(" "))
+                        self.add_truncated_sequence(line.strip().split(" "))
 
 
     def add_truncated_sequence(self, tokens):
@@ -56,28 +57,31 @@ class sequence_database:
         return self.map_item_count
 
 
-    def add_sequence(self, tokens):
-        seq = sequence()
-        seq.set_id(self.size)
-
-        self.size += 1
+    def add_sequence(self, tokens, seq=None):
+        if seq == None:
+            seq = sequence()
 
         itemset = []
 
         for token in tokens:
+
             if token == '-1':
-                    self.num_itemset += 1
-                    seq.add_itemset(itemset)
-                    itemset = []
+                self.num_itemset += 1
+                seq.add_itemset(itemset)
+                itemset = []
                 
             elif token == '-2':
                 self.sequences.append(seq)
                 self.num_itemset += 1
+                self.size += 1
+                seq = None
 
             else:
                 item = token.strip()
                 if len(item) > 0:
                     itemset.append(int(token))
+
+        return seq
 
     def get_sequences(self):
         return self.sequences
@@ -106,10 +110,3 @@ class sequence_database:
         test_set = self.sequences[relative_ratio:].copy()
         
         return (train_set,test_set)
-
-
-
-
-
-
-    

@@ -6,7 +6,7 @@ sys.path.append(newPath)
 
 from predictor_base import preidctor_base
 from sequence import sequence
-from utils.paramable import paramable
+# from utils.paramable import paramable
 
 
 class dg_arcs:
@@ -68,12 +68,9 @@ class dg(preidctor_base):
     def __init__(self, look_ahead=4):
         super().__init__()
         self.map_node = {}
-        self.parameters = paramable()
         self.tag = "DG"
         self.look_ahead = look_ahead
 
-    def set_params(self, params):
-        self.parameters = params
 
     def train(self, sequences):
         
