@@ -30,7 +30,6 @@ class sequence_database:
 
     def add_truncated_sequence(self, tokens):
         seq = sequence()
-        seq.set_id(self.size)
 
         self.size += 1
 

@@ -24,7 +24,9 @@ class statistic_logger:
                 result += f"---------  {algo.get_name()}  --------- \n"
 
                 for stat in self.stats_name:
-                    value = round(algo.get(stat) * 100, 2)
+                    # value = round(algo.get(stat) * 100, 3)
+
+                    value = "%.3f" % (algo.get(stat) * 100)
 
                     result += f"{stat} \t {value}% \n"
 

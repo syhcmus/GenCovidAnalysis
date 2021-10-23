@@ -5,6 +5,7 @@ import sys
 from dg import dg
 from akom import akom
 from cpt import cpt
+from tdag import tdag
 
 parentDir=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 newPath=os.path.join(parentDir, 'database')
@@ -15,7 +16,7 @@ from utils.statistic_logger import statistic_logger
 
 class estimator:
 
-    def __init__(self, input, max_count=500, consequent_size=1,window_size=5):
+    def __init__(self, input, max_count=700, consequent_size=1,window_size=5):
         self.predictors = []
         self.database = sequence_database(max_count)
         self.stats = None
@@ -152,15 +153,13 @@ class estimator:
 
             success = int(self.stats.get("success", predictor_tag))
             failure = int(self.stats.get("failure", predictor_tag))
-            no_match = int(self.stats.get("no match", predictor_tag))
 
             maching_size = success + failure
-            testing_size = maching_size + no_match
-
+            testing_size = maching_size
 
             self.stats.cal_percent("success", predictor_tag, maching_size)
             self.stats.cal_percent("failure", predictor_tag, maching_size)
-            self.stats.cal_percent("no match", predictor_tag, maching_size)
+
 
             self.stats.set("overall", predictor_tag, success)
             self.stats.cal_percent("overall", predictor_tag, testing_size)
@@ -179,6 +178,7 @@ if __name__ == "__main__":
     est.add_pridictor(dg())
     est.add_pridictor(akom())
     est.add_pridictor(cpt())
+    est.add_pridictor(tdag())
 
     est.run(sample_type="kfold", param=10)
     # est.run(sample_type="holdout", param=0.8)
