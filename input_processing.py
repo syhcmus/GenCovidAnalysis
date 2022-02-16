@@ -1,11 +1,9 @@
-from operator import index
 import pandas as pd
 import numpy as np
 from Bio import SeqIO
-import argparse
 from sklearn.model_selection import train_test_split
 import random
-old_flag = False
+import os
 
 def read_fasta(input_fasta):
     '''
@@ -86,18 +84,6 @@ def change_seq(sequence):
     }
     keys = change_map.keys()
 
-    # change_map["R"] = ["A","G"]
-    # change_map["Y"] = ["C","T"]
-    # change_map["S"] = ["C","G"]
-    # change_map["W"] = ["A","T"]
-    # change_map["K"] = ["G","T"]
-    # change_map["M"] = ["A","C"]
-    # change_map["B"] = ["C","T","G"]
-    # change_map["D"] = ["A","T","G"]
-    # change_map["H"] = ["C","T","A"]    
-    # change_map["V"] = ["C","A","G"]
-    # change_map["N"] = ["A","C","T","G"]
-    # keys = change_map.keys()
     
 
     seq = sequence.upper()
@@ -179,10 +165,12 @@ def main():
 
     print("Preprocessing data ...") 
 
+    if not os.path.exists('input'):
+        os.mkdir('input')
+
     id_seq_map = read_fasta(input_fasta)
     data_preparation(id_seq_map,info_file,label,label_helper_file)
 
-    print("Done") 
     
 
 if __name__ == "__main__":
