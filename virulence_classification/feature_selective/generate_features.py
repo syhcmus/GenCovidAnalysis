@@ -97,9 +97,9 @@ def position_specific(df, order, nucleotides, max_length=30000):
     return result
 
 
-def generate_features(df, outdir='', filename=''):
+def generate_features(df, filename=''):
     '''
-    Generate features of biological features of gen
+    Generate features of biological features of gene
     Input: dataset of gen
     Output: features
     '''
@@ -110,44 +110,33 @@ def generate_features(df, outdir='', filename=''):
     if not os.path.exists(dir):
         os.makedirs(dir)
 
-    # nucleotides_ = ['A', 'C', 'T', 'G']
-    # iupac_neucleotides = []
+    nucleotides_ = ['A', 'C', 'T', 'G']
+    iupac_neucleotides = []
 
-    # df['Sequence'] = df['Sequence'].str.upper()
+    df['Sequence'] = df['Sequence'].str.upper()
 
-    # print('Data Shape: ', df.shape)
+    print('Data Shape: ', df.shape)
 
-    # print("Generating features of independent position")
-    # df_pos_ind = position_independent(df, 4, nucleotides_, iupac_neucleotides).astype(np.int32)
-    # # df_pos_ind.to_csv(f"{dir}{filename}_pi.csv", index=False)
-    # # df_pos_ind.to_hdf(dir + filename + '_pi.h5', key='pi')
+    print("Generating features of independent position")
+    df_pos_ind = position_independent(df, 4, nucleotides_, iupac_neucleotides).astype(np.int32)
 
-    # print("Generating features of specific position")
-    # df_pos_ps = position_specific(df, 5, nucleotides_).astype(np.int32)
-    # # df_pos_ps.to_csv(f"{dir}{filename}_ps.csv", index=False)
-    # # df_pos_ps.to_hdf(dir + filename + '_ps.h5', key='ps')
 
-    # print("Generating features of gap features")
-    # df_gap = gap_features(df, nucleotides_).astype(np.int32)
-    # # df_gap.to_csv(f"{dir}{filename}_gap.csv", index=False)
-    # # df_gap.to_hdf(dir + filename + '_gap.h5', key='gap')
+    print("Generating features of specific position")
+    df_pos_ps = position_specific(df, 5, nucleotides_).astype(np.int32)
 
-    # result = pd.concat([df_pos_ind, df_gap, df_pos_ps], axis=1, sort=False).astype(np.int32)
 
-    # result.to_csv(f"{dir}/{filename}",index=False)
+    print("Generating features of gap features")
+    df_gap = gap_features(df, nucleotides_).astype(np.int32)
 
-    result = pd.read_csv(f"{dir}/{filename}")
+    result = pd.concat([df_pos_ind, df_gap, df_pos_ps], axis=1, sort=False).astype(np.int32)
+    result.to_csv(f"{dir}/{filename}",index=False)
+
+    # result = pd.read_csv(f"{dir}/{filename}")
 
     return result
 
 
 if __name__ == "__main__":
-    print("Generating features for train dataset")
     train_filename = 'train'
     generate_features(train_filename)
     
-
-    # print("Generating features for test dataset")
-    # test_filename = "test"
-    # generate_features(test_filename)
-    # print("Done")
