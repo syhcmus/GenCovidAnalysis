@@ -1,73 +1,69 @@
 
-import os
-import argparse
-from tabnanny import verbose
-import time
-import datetime
-import pandas as pd
-import random
-import math
-import tensorflow.keras
 from tensorflow.keras import backend as K
-from tensorflow.keras.models import Model, Sequential, load_model
+from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, LSTM, Flatten,Input,LeakyReLU,BatchNormalization,Reshape,Dropout,Activation,Conv1D,MaxPool1D,concatenate
 from tensorflow.keras.optimizers import Adam,RMSprop,SGD
 from tensorflow.keras.callbacks import ModelCheckpoint,EarlyStopping
 import numpy as np
-import matplotlib.pyplot as plt
-from pprint import pprint
-import itertools
-from sklearn.model_selection import train_test_split
 from sklearn import metrics
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.metrics import f1_score, precision_score, recall_score, confusion_matrix,roc_auc_score,accuracy_score
 from lightgbm import LGBMClassifier
 from sklearn.model_selection import RandomizedSearchCV
 import pickle as pkl
-from shaphypetune import BoostSearch, BoostBoruta, BoostRFE, BoostRFA
-from scipy import stats
+
 
 ######### global defination ###############
 
 LOSS_FN = 'binary_crossentropy'  
-LEARNING_RATE = 0.01  
-n_epochs = 2
-BATCH_SIZE =32
+LEARNING_RATE = 0.001  
+n_epochs = 100
+BATCH_SIZE = 64
 
 
 
 def CNN(dim1,dim2):
 
-  model = Sequential()
-  model.add(Conv1D(filters=10, kernel_size=5, strides=1, padding="same",activation='relu', input_shape=(dim1,dim2)))
+    '''
+    Create CNN model
+    Input: input shape of model
+    Output: CNN model
+    
+    '''
 
-  model.add(MaxPool1D(pool_size=2))
-  model.add(BatchNormalization(momentum=0.9))
+    model = Sequential()
+    model.add(Conv1D(filters=10, kernel_size=5, strides=1, padding="same",activation='relu', input_shape=(dim1,dim2)))
 
-  model.add(Conv1D(filters=20, kernel_size=5, strides=1, padding="same",activation='relu'))
+    model.add(MaxPool1D(pool_size=2))
+    model.add(BatchNormalization(momentum=0.9))
 
-  model.add(MaxPool1D(pool_size=2))
-  model.add(BatchNormalization(momentum=0.9))
+    model.add(Conv1D(filters=20, kernel_size=5, strides=1, padding="same",activation='relu'))
 
-  model.add(Conv1D(filters=30, kernel_size=5))
-  model.add(MaxPool1D(pool_size=2))
-  model.add(BatchNormalization(momentum=0.9))
+    model.add(MaxPool1D(pool_size=2))
+    model.add(BatchNormalization(momentum=0.9))
 
-  model.add(Flatten())
-  
-  model.add(Dense(500))
-  model.add(Dropout(0.5))
+    model.add(Conv1D(filters=30, kernel_size=5))
+    model.add(MaxPool1D(pool_size=2))
+    model.add(BatchNormalization(momentum=0.9))
 
-  model.add(Dense(1,activation='sigmoid'))
+    model.add(Flatten())
+    
+    model.add(Dense(500))
+    model.add(Dropout(0.5))
 
-  model.compile(loss=LOSS_FN, optimizer=Adam(lr=LEARNING_RATE, amsgrad=True), metrics=['accuracy'])
-  model.summary()
+    model.add(Dense(1,activation='sigmoid'))
 
-  return model
+    model.compile(loss=LOSS_FN, optimizer=Adam(lr=LEARNING_RATE, amsgrad=True), metrics=['accuracy'])
+    model.summary()
+
+    return model
 
 
 def LGBM():
+    '''
+    Create LGBM model
+    Input: None
+    Output: LGBM model
+    '''
+
     clf = LGBMClassifier(objective='binary')
 
     grid_params = {
@@ -83,6 +79,11 @@ def LGBM():
 
 
 def train(train_x, train_y, model_name=""):
+    '''
+    Create train model
+    Input: train features, train label, model name
+    Output: train model
+    '''
 
 
     if model_name == 'CNN':
@@ -117,12 +118,18 @@ def train(train_x, train_y, model_name=""):
 
 
 
-def score(test_y, pred_y, prob_y):
+def score(test_y, pred_y):
+
+    '''
+    Evaluate model
+    Input: true label, predicted label
+    Output: score of model
+    '''
+
     accuracy = metrics.accuracy_score(test_y, pred_y)
     precision = metrics.precision_score(test_y, pred_y)
     recall = metrics.recall_score(test_y, pred_y)
     f1 = metrics.f1_score(test_y, pred_y)
-    # roc = metrics.roc_auc_score(test_y,prob_y)
 
     return accuracy, precision, recall, f1
 
