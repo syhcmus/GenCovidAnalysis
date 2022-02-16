@@ -136,6 +136,12 @@ def score(test_y, pred_y):
 
 def predict(test_x, test_y, model_name=''):
 
+    '''
+    Use training model to predict
+    Input: test features, test label, model name
+    Output: score of model
+    '''
+
     prob_y = None
     pred_y = None
 
