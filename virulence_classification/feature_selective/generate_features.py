@@ -3,6 +3,8 @@ import pandas as pd
 import itertools
 import numpy as np
 import os
+from warnings import simplefilter
+simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
 
 
 def gap_features(df, nucleotides, max_gap = 30):
