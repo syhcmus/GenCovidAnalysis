@@ -14,7 +14,11 @@ dataset = ""
 direc = ""
 
 def clustering(ACC_ids_list,score_mat,num_seqs,num_clusters):
-
+    '''
+    Clustering and assign sequence id for center
+    Input: sequence id, matrix distance, number of sequence, number of cluster
+    Output: None
+    '''
    
     ids_list = ACC_ids_list
    
@@ -22,44 +26,29 @@ def clustering(ACC_ids_list,score_mat,num_seqs,num_clusters):
     cluster_map['data_index'] = score_mat.index.values
    
     scores = score_mat.to_numpy()
-    # print(scores.shape)
 
     kmeans = cluster.KMeans(num_clusters)
     results = kmeans.fit(scores)
 
     cluster_map['cluster'] = results.labels_
-    labels = results.labels_
-    
-
-    # print(num_clusters)
     centers = results.cluster_centers_
-
     closest, _ = pairwise_distances_argmin_min(centers, scores)
-
-    clusters = [[] for i in range(num_clusters)]
 
     info_handle = open(direc+"/"+dataset+"_center.txt","w")
     info_handle.write(ids_list[closest[0]])
     info_handle.close()
 
-    for i in range(0,num_seqs):
-        clusters[labels[i]].append(ids_list[i])
 
 
-def MDS_on_distance_matrix(matrix):
-    # score_matrix = StandardScaler().fit_transform(matrix)
-    score_matrix = matrix
-    model = MDS(n_components=2,dissimilarity="precomputed",random_state=1)
-    matrix_transformed = model.fit_transform(score_matrix)
-    # print(matrix_transformed.shape)
-    
+def PCA_on_distance_matrix(matrix):
+    '''
+    Perform PCA on distance matrix
+    Input: Matrix of distance
+    Output: Matrix after performing PCA
+    '''
 
-def PCA_on_distance_matrix(scores,num_clusters):
-    matrix = scores
-    # matrix = scores.to_numpy()
     print("Starting PCA")
     PCA_model = PCA(n_components=2)
-    # PCA_model.fit(matrix)
     scaled_matrix = StandardScaler().fit_transform(matrix)
     PCA_model.fit(scaled_matrix)
 
@@ -73,29 +62,31 @@ def PCA_on_distance_matrix(scores,num_clusters):
 
 
 def find_representative_sequence():
+    '''
+    Find representative sequence 
+    Input: None
+    Output: None
+    '''
   
-    rem = os.listdir('./data/All_Countries_Distance_Matrix')
+    countries = os.listdir('./data/All_Countries_Distance_Matrix')
     main_direc = './data/All_Countries_Distance_Matrix'
     global direc
     direc = "./data/All_Countries_Representative_Seq"
     print("working with -> "+direc)
+
     if not os.path.exists(direc):
         os.mkdir(direc)
 
-    for cont_ in rem:
+    for cont_ in countries:
         global dataset,method
         
-        dataset = cont_.split("_")[0] #Change this
+        dataset = cont_.split("_")[0]
         method = "Represtative_seq"
-
-        c_time = time()
 
         csv_file = main_direc +"/"+dataset+"_distance_matrix.csv"
 
         matrix = pd.read_csv(csv_file)
-        print(matrix.shape)
-        print("Time for loading dataset ->",time()-c_time)
-        ################
+ 
         if(matrix.shape[0] == 1):
             info_handle = open(direc+"/"+dataset+"_center.txt","w")
             info_handle.write(matrix.columns[0])
@@ -103,7 +94,7 @@ def find_representative_sequence():
             continue
         num_clusters = 1
         
-        df = PCA_on_distance_matrix(matrix,num_clusters)
+        df = PCA_on_distance_matrix(matrix)
         num_seqs = matrix.shape[0]
         clustering(matrix.copy().columns,df,num_seqs,num_clusters)
         
