@@ -1,8 +1,8 @@
-from operator import mod
 from keras.models import Sequential,load_model
 from keras.layers import LSTM,Conv1D,MaxPooling1D,Activation,Flatten,Bidirectional,Embedding,Masking,Dense,Dropout
 from keras.callbacks import ModelCheckpoint
 from keras.utils import np_utils
+from keras.preprocessing.text import Tokenizer
 from tensorflow.keras.optimizers import RMSprop
 import pandas as pd 
 import numpy as np 
@@ -10,9 +10,8 @@ import collections
 import os
 from random import randrange
 from numpy import save
+from sklearn.utils import shuffle
 
-
-from keras.preprocessing.text import Tokenizer
 
 date_country_map = {}
 final_input_map = {}
@@ -23,7 +22,7 @@ OUTPUT_FOLDER = "results/"
 
 
 
-N_EPOCHS = 1
+N_EPOCHS = 100
 
 
 direc = INPUT_FOLDER+"All_Countries_Representative_Seq"
@@ -34,9 +33,13 @@ all_cluster_direc = INPUT_FOLDER+"All_Clusters"
 
 
 class Seq_Wrapper:
+    '''
+    Sequence wrapper class to operate on sequence
+    '''
     def __init__(self,seq,use_indicator=0):
         self.seq = seq
         self.indicator = use_indicator
+
     def __repr__(self):
         return "<Seq:%s, Indicator:%d>" % (self.seq, self.indicator)
 
@@ -44,77 +47,88 @@ class Seq_Wrapper:
         return "<Seq:%s, Indicator:%d>" % (self.seq, self.indicator)
     
     def get_indicator(self):
+        '''
+        Get label of sequence
+        '''
         return self.indicator
     
     def get_seq(self):
+        '''
+        Get sequence
+        '''
         return self.seq
 
     def set_indi(self,indicator):
       self.indicator = indicator
 
 def formatter(date_):
+    '''
+    Format date into right format
+    Input: date
+    Output: date with right format
+    '''
     return date_.strftime("%d_%m_%Y")
 
-def info_sequencer(cluster_file,num,start,end):
+def info_sequencer(cluster_file,country,start,end):
+
+    '''
+    Get segment of sequence for country with representative sequence of it
+    Input: country dataset, country name, start of sequence's segment, end of sequence's segment
+    Output: None
+    '''
+
     global date_country_map
 
     print("Working with cluster", cluster_file)
     c_fl = open(cluster_file,"r")
     id_list = c_fl.read().split("\n")
-    # Fast_Vector_File = Fast_Vector_direc + "/" + num + "_Novel_Fast_Vector.csv"
-    # Fast_vector_df = pd.read_csv(Fast_Vector_File)
     Other_Info_df = pd.read_csv(Other_Info_File)
-    # final_df_1 = Fast_vector_df.loc[Fast_vector_df["Accession ID"].isin(id_list)]
     final_df = Other_Info_df.loc[Other_Info_df["Accession ID"].isin(id_list)]
-
-    # final_df = pd.merge(final_df_1, final_df_2, on='Accession ID')
     final_cols = ["Accession ID","Virus name","Location","Collection date","Death","Sequence"]
     final_df = final_df[final_cols]
 
     direc_point = None
     for point,maps in date_country_map.items():
-        if(num in maps):
+        if(country in maps):
             direc_point = formatter(point)
-            # sequences = final_df["Sequence"]
-            final_input_map[point][num] = [Seq_Wrapper(t_seq[start:end]) for t_seq in final_df["Sequence"]]
-    # twenty_seq_df.append(final_df)
+            final_input_map[point][country] = [Seq_Wrapper(t_seq[start:end]) for t_seq in final_df["Sequence"]]
+
     if direc_point != None:
-        final_df_name = num+ "_representative_seq" +".csv"
+        final_df_name = country + "_representative_seq" +".csv"
         final_df.to_csv(all_cluster_direc +"/"+direc_point+"/"+final_df_name)
 
 
-
-def get_cluster_dist(cluster1,cluster2):
-    vect1 = cluster1["Fast Vector"]
-    # print(vect1[0])
-    vect2 = cluster2["Fast Vector"]
-    # print(vect2.shape)
-    final_vect = np.zeros([vect1.shape[0],vect2.shape[0]])
-    # print(final_vect.shape)
-    for i in range(vect1.shape[0]):
-        for j in range(vect2.shape[0]):
-            var_1 = np.asarray(vect1[i].replace("[","").replace("]","").replace(' ','').split(",")).astype(np.float)
-            var_2 = np.asarray(vect2[j].replace("[","").replace("]","").replace(' ','').split(",")).astype(np.float)
-
-            final_vect[i][j] = np.linalg.norm((var_1-var_2),ord=2)
-    dist = np.sum(final_vect)
-
-    return dist
-
-def file_name_checker(cluster_file):
+def file_name_formatter(cluster_file):
+    '''
+    Format file name of country
+    Input: file name of country
+    Output: file name of country after being formatted
+    '''
     if(cluster_file.startswith("USA")):
         bleh = cluster_file.split("_")
-        num = bleh[0] + "_" + bleh[1]
+        country = bleh[0] + "_" + bleh[1]
     else:
-        num = cluster_file.split("_")[0]
-    return num
+        country = cluster_file.split("_")[0]
+
+    return country
 
 def file_array_formatter(file_arr):
-    return [file_name_checker(fl) for fl in file_arr]
+    '''
+    Format file name of array country
+    Input: file name of array country
+    Output: file name of array country after being formatted
+    '''
+    return [file_name_formatter(fl) for fl in file_arr]
 
 
     
 def CNN(dim1,dim2,output_dim):
+
+    '''
+    Create CNN model
+    Input: shape of input, shape of output
+    Output: CNN model
+    '''
 
     model = Sequential()
     model.add(Conv1D(filters=1024,
@@ -139,13 +153,14 @@ def CNN(dim1,dim2,output_dim):
 
 
 def RNN(dim,lstm_cells=64):
-    """Make a word level recurrent neural network with option for pretrained embeddings
-       and varying numbers of LSTM cell layers."""
+    '''
+    Create RNN model
+    Input: shape of output, size of lstm cell
+    Output: RNN model
+    '''
 
     model = Sequential()
 
-    # Map words to an embedding
-    
     model.add(
         Embedding(
             input_dim=dim,
@@ -164,13 +179,9 @@ def RNN(dim,lstm_cells=64):
             recurrent_dropout=0.1))
         
     model.add(Dense(64, activation='relu'))
-    # Dropout for regularization
     model.add(Dropout(0.5))
-
-    # Output layer
     model.add(Dense(dim, activation='softmax'))
 
-    # Compile the model
     model.compile(
         optimizer='adam',
         loss='categorical_crossentropy',
@@ -181,17 +192,20 @@ def RNN(dim,lstm_cells=64):
 
 
 def make_single_position_dataset(pos):
-    ####### run at the time of loading the time series sequences #############
+    '''
+    Make train, test dataset when predicting single position in sequence
+    Input: Position to predict
+    Output: train, test dataset
+    '''
+    
     with open(OUTPUT_FOLDER+'all_time_series.txt', 'r') as f:
         list_time_series_all = f.read().splitlines()
 
 
-    ######### mapping chars to integers ##############
     chars = "ATGC"
     char_to_int_for_y = dict((c, i) for i, c in enumerate(chars))
  
 
-    ################## taking full sequence ###################
     n_chars = len(list_time_series_all[0])
     step = 1
 
@@ -208,25 +222,20 @@ def make_single_position_dataset(pos):
         seq_out = time_series[n_chars-pos]
 
         one_output = char_to_int_for_y[seq_out]
-    #     one_output = to_categorical(one_output)
         output_for_lstm.append(one_output)
-        
-        # dataX = np_utils.to_categorical(dataX)
         input_for_lstm.append(dataX)
 
 
     input_for_lstm = np.array(input_for_lstm)
     output_for_lstm = np.array(output_for_lstm)
-
-    output_for_lstm = np_utils.to_categorical(output_for_lstm)
-
+    
     input_for_lstm = np_utils.to_categorical(input_for_lstm)
+    output_for_lstm = np_utils.to_categorical(output_for_lstm)
 
     X_train, X_test, y_train, y_test = train_test_split(
     input_for_lstm, output_for_lstm, test_size=0.20, random_state=42)
 
 
-    ###### saving numpy arrays ###########3
     save(OUTPUT_FOLDER+'X_train.npy', X_train)
     save(OUTPUT_FOLDER+'X_test.npy', X_test)
     save(OUTPUT_FOLDER+'y_train.npy', y_train)
@@ -236,47 +245,49 @@ def make_single_position_dataset(pos):
 def make_sequence(texts,
                    lower=False,
                    filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n'):
-    """Turn a set of texts into sequences of integers"""
 
-    # Create the tokenizer object and train on texts
+    '''
+    Turn sequences of texts into sequences of integers
+    Input: Sequences of texts
+    Output: number of unique words, sequences of integers, labels
+    '''
+
     tokenizer = Tokenizer(lower=lower, filters=filters)
     tokenizer.fit_on_texts(texts)
 
-    # Create look-up dictionaries and reverse look-ups
     word_idx = tokenizer.word_index
     num_words = len(word_idx) + 1
 
 
     print(f'There are {num_words} unique words.')
 
-    # Convert text to sequences of integers
     sequences = tokenizer.texts_to_sequences(texts)
 
 
     training_seq = []
     labels = []
 
-    # Iterate through the sequences of tokens
+
     for seq in sequences:
-        # Set the features and label
         training_seq.append(seq[:-1])
         labels.append(seq[-1])
 
     return  num_words, training_seq, labels
 
 
-from sklearn.utils import shuffle
-
 def make_train_test(features,
                        labels,
                        num_words,
                        train_fraction=0.8):
-    """Create training and validation features and labels."""
+    '''
+    Create training and validation features and labels when predicting segment of sequence
+    Input: features, labels, number of unique words, size of train dataset
+    Output: train,test dataset
+    '''
 
-    # Randomly shuffle features and labels
     features, labels = shuffle(features, labels, random_state=42)
 
-    # Decide on number of samples for training
+
     train_end = int(train_fraction * len(labels))
 
     train_features = np.array(features[:train_end])
@@ -285,14 +296,12 @@ def make_train_test(features,
     train_labels = labels[:train_end]
     valid_labels = labels[train_end:]
 
-    # Convert to arrays
+
     X_train, X_valid = np.array(train_features), np.array(valid_features)
 
-    # Using int8 for memory savings
     y_train = np.zeros((len(train_labels), num_words), dtype=np.int8)
     y_valid = np.zeros((len(valid_labels), num_words), dtype=np.int8)
 
-    # One hot encoding of labels
     for example_index, word_index in enumerate(train_labels):
         y_train[example_index, word_index] = 1
 
@@ -304,6 +313,11 @@ def make_train_test(features,
 
 
 def make_sequence_dataset():
+    '''
+    Make train, test dataset when predicting segment of sequence
+    Input: None
+    Output: None
+    '''
     time_series_all = None
     with open(OUTPUT_FOLDER+'all_time_series.txt', 'r') as f:
         time_series_all = f.read().splitlines()
@@ -315,7 +329,7 @@ def make_sequence_dataset():
     X_train, X_test, y_train, y_test = make_train_test(
     features, labels, num_words)    
     
-    ###### saving numpy arrays ###########3
+
     save(OUTPUT_FOLDER+'X_train.npy', X_train)
     save(OUTPUT_FOLDER+'X_test.npy', X_test)
     save(OUTPUT_FOLDER+'y_train.npy', y_train)
@@ -324,7 +338,13 @@ def make_sequence_dataset():
 
 
 def predict(model_name, single_position):
-    ######### loading test dataset #############
+
+    '''
+    Predict the mutation
+    Input: model name, predict single position or not
+    Output: evaluation of model
+    '''
+    
     X_test = np.load(OUTPUT_FOLDER+'X_test.npy')
     y_test = np.load(OUTPUT_FOLDER+'y_test.npy')
 
@@ -348,8 +368,11 @@ def predict(model_name, single_position):
 
 def train(model_name, single_position):
 
-
-    ######### loading train dataset #############
+    '''
+    Trainging model to predict mutation
+    Input: model name, predict single position or not
+    Output: model after training
+    '''
     X_train = np.load(OUTPUT_FOLDER+'X_train.npy')
     y_train = np.load(OUTPUT_FOLDER+'y_train.npy')
     
@@ -429,13 +452,14 @@ def train(model_name, single_position):
         model.save(OUTPUT_FOLDER+'sequence_RNN.h5')
 
 
-    
-    # model1.load(OUTPUT_FOLDER+'CNN_BI_LSTM_pos_'+str(POS_OF_MUTATION)+'_val_15.h5')
-
-
-
 
 def prepare_data(start,end,single_position):
+    '''
+    Prepare data for model
+    Input: start of segment sequence, end of segment sequence, predict single position or not
+    Output: data after preparing
+    '''
+
     global date_country_map
     global final_input_map
 
@@ -495,9 +519,6 @@ def prepare_data(start,end,single_position):
         key = key.strftime("%d_%m_%Y")
         if not os.path.exists(all_cluster_direc+"/"+key):
             os.mkdir(all_cluster_direc+"/"+key)
-
-    def formatter(date_):
-        return date_.strftime("%d_%m_%Y")
 
     final_input_map = {}
     for point in date_country_map:
@@ -559,7 +580,7 @@ def prepare_data(start,end,single_position):
             for i in range(total_seq):
                 if final_input_map[date][current_country][i].get_indicator() == 0:
                     seq_idx = i
-                    ###### set indicator 1
+                  
                     final_input_map[date][current_country][i].set_indi(1)
                     break
             if seq_idx == -1:
@@ -570,7 +591,6 @@ def prepare_data(start,end,single_position):
             one_time_series = one_time_series + sequence
             one_time_series1.append(sequence)
                         
-            # find next country from edge_map to select seq from
             if date in edge_map.keys():        
                 total_next_country = len(edge_map[date][current_country])
                 next_country_idx = randrange(total_next_country)
@@ -601,37 +621,14 @@ def prepare_data(start,end,single_position):
 
 
 def transform_data(start,end,pos,single_position):
+    '''
+    Transform data for model
+    Input: start of segment sequence, end of segment sequence, predict single position or not
+    Output: data after transforming
+    '''
     prepare_data(start,end,single_position)
 
     if single_position:
         make_single_position_dataset(pos)
     else: 
         make_sequence_dataset()
-
-    
-
-def main():
-
-    start = 23825 # start site of interests
-    end = 23829 # end site of interests
-    pos = 3 # single position of genome sequence to predict
-    model_name = 'CNN'
-    single_position = False
-
-    # prepare_data(start,end,single_position)
-
-    # if single_position:
-    #     make_single_position_dataset(pos)
-    # else: 
-    #     make_sequence_dataset()
-    
-
-    train(model_name,single_position)
-
-    eval = predict(model_name,single_position)
-
-    test_accuracy = eval[1]
-    print(f'Accuracy: {round(100 * test_accuracy, 2)}%')
-
-if __name__ == '__main__':
-    main()
