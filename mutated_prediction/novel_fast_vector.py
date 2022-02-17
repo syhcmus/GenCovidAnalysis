@@ -1,11 +1,15 @@
 import itertools
 import os
 import numpy as np
-import sys
 import pandas as pd
 from collections import Counter
 
 def encode(seq,change_map):
+    '''
+    Encode sequence
+    Input: sequence to encode, map to encode
+    Output: sequence after encoded
+    '''
     n_seq = []
     for base in seq:
         if base in change_map:
@@ -16,8 +20,13 @@ def encode(seq,change_map):
     return n_seq
 
 def R_Y_coding(seq):
+    '''
+    Encode base to R or Y
+    Input: Sequence to encode
+    Output: Sequence after encoded
+    '''
+
     change_map = {'A':'R','G':'R','C':'Y','T':'Y'}
-    
     
     n_seq = encode(seq,change_map)
     _,count = np.unique(n_seq,return_counts=True)
@@ -28,6 +37,13 @@ def R_Y_coding(seq):
     return (ry_encode_seq,n_r,n_y)
 
 def M_K_coding(seq):
+
+    '''
+    Encode base to M or K
+    Input: Sequence to encode
+    Output: Sequence after encoded
+    '''
+    
     change_map = {'A':'M','G':'K','C':'M','T':'K'}
 
     n_seq = encode(seq,change_map)
@@ -39,6 +55,13 @@ def M_K_coding(seq):
     return (mk_encode_seq,n_m,n_k)
 
 def S_W_coding(seq):
+
+    '''
+    Encode base to S or W
+    Input: Sequence to encode
+    Output: Sequence after encoded
+    '''
+
     change_map = {'A':'W','G':'S','C':'S','T':'W'}
 
     n_seq = encode(seq,change_map)
@@ -49,27 +72,43 @@ def S_W_coding(seq):
 
     return (sw_encode_seq,n_s,n_w)
 
-def get_mean_position(seq,n_1,c):
+def get_mean_position(seq,n,c):
+    '''
+    Get mean position of base in sequence
+    Input: Sequence,number of base ,base
+    Output: mean position of base
+    '''
 
     length = len(seq)
-    sum = 0
+    mean = 0
+
     for idx in range(length):
         if(seq[idx] == c):
-            sum+= (idx*(1.0/n_1))
+            mean += (idx*(1.0/n))
 
-    return sum
+    return mean
 
-def get_variance(seq,n_1,meu,c):
+def get_variance(seq,n,meu,c):
+    '''
+    Get variance of base in sequence
+    Input: sequence,number of base ,base
+    Output: variance of base
+    '''
 
     length = len(seq)
-    sum = 0
+    variance = 0
     for i in range(length):
         if(seq[i] == c):
-            sum += (((i-meu)**2)*1.0)/(n_1*length)
+            variance += (((i-meu)**2)*1.0)/(n*length)
 
-    return sum
+    return variance
 
 def get_NFV(seq):
+    '''
+    Calculate novel fast vector of sequence
+    Input: sequence to calculate
+    Output: novel fast vector
+    '''
 
     (ry_encode_seq,n_r,n_y)  = R_Y_coding(seq)
     (mk_encode_seq,n_m,n_k) = M_K_coding(seq)
@@ -99,6 +138,11 @@ def get_NFV(seq):
     return Fast_vector
 
 def minkowski(list_,seqs_number,exponent): 
+    '''
+    Calculate minkowski distance between sequence
+    Input: list of sequence, sequence number, number of sequence
+    Output: matrix of distance
+    '''
     matrix = np.zeros([seqs_number, seqs_number])
     for i, j in itertools.combinations(range(0,seqs_number),2):
          matrix[i][j]= matrix [j][i] = np.linalg.norm((list_[i,:]-list_[j,:]),ord=exponent)
@@ -106,9 +150,20 @@ def minkowski(list_,seqs_number,exponent):
     return matrix
 
 def euclidean(list_,seqs_number):
+    '''
+    Calculate euclidean distance between two sequences
+    Input: list of sequence, sequence number
+    Output: matrix of sequence
+    '''
     return minkowski(list_,seqs_number,2)
 
 def create_vects_and_country_wise_distance_matrix():
+    '''
+    Create country distance vector
+    Input: None
+    Output: None
+    '''
+
     main_dir = 'data/All_Countries_Splitted'
     files = os.listdir(main_dir)
 
