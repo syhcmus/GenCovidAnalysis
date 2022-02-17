@@ -4,6 +4,11 @@ import numpy as np
 
 
 def split_by_country(df):
+    '''
+    Extract country name from location
+    Input: Dataframe contains location
+    Output: List of country name
+    '''
     locations = df["Location"]
 
     loc,_ = np.unique(locations,return_counts=True)
@@ -27,6 +32,22 @@ def split_by_country(df):
 
     countries.sort()
 
+    return countries
+
+
+
+def file_spliter():
+    '''
+    Create file followed by country names
+    Input: None
+    Output: None
+    '''
+
+    label = 'Death'
+    required_file = "../input/dataset_labelled_by_" + label +".csv"
+    df = pd.read_csv(required_file)
+    countries = split_by_country(df.copy())
+
     if not os.path.exists('data'):
         os.mkdir('data')
 
@@ -39,12 +60,6 @@ def split_by_country(df):
         n_df = df.loc[df["Location"].str.contains(cont_)]
         f_name = direc+"/"+cont_+".csv"
         n_df.to_csv(f_name,index=False)
-
-def file_spliter():
-    label = 'Death'
-    required_file = "../input/dataset_labelled_by_" + label +".csv"
-    df = pd.read_csv(required_file)
-    split_by_country(df.copy())
 
 
 if __name__ == "__main__":
