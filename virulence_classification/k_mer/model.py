@@ -161,6 +161,6 @@ def predict(test_x, test_y, model_name=''):
         prob_y = model.predict_proba(test_x)
         pred_y = model.predict(test_x)
 
-    accuracy, precision, recall, f1_score = score(test_y,pred_y,prob_y)
+    accuracy, precision, recall, f1_score = score(test_y,pred_y)
 
     return accuracy, precision, recall, f1_score
