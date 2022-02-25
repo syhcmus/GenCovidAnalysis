@@ -1,11 +1,8 @@
 import sklearn.cluster as cluster
 import pandas as pd
-import numpy as np 
 import os
-from sklearn.manifold import MDS
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-from time import time
 from sklearn.metrics import pairwise_distances_argmin_min
 
 
@@ -13,19 +10,17 @@ method = ""
 dataset = ""
 direc = ""
 
-def clustering(ACC_ids_list,score_mat,num_seqs,num_clusters):
+def clustering(ids_list,score_matrix,num_clusters):
     '''
     Clustering and assign sequence id for center
     Input: sequence id, matrix distance, number of sequence, number of cluster
     Output: None
     '''
    
-    ids_list = ACC_ids_list
-   
     cluster_map = pd.DataFrame()
-    cluster_map['data_index'] = score_mat.index.values
+    cluster_map['data_index'] = score_matrix.index.values
    
-    scores = score_mat.to_numpy()
+    scores = score_matrix.to_numpy()
 
     kmeans = cluster.KMeans(num_clusters)
     results = kmeans.fit(scores)
@@ -34,9 +29,9 @@ def clustering(ACC_ids_list,score_mat,num_seqs,num_clusters):
     centers = results.cluster_centers_
     closest, _ = pairwise_distances_argmin_min(centers, scores)
 
-    info_handle = open(direc+"/"+dataset+"_center.txt","w")
-    info_handle.write(ids_list[closest[0]])
-    info_handle.close()
+    clusters = open(direc+"/"+dataset+"_center.txt","w")
+    clusters.write(ids_list[closest[0]])
+    clusters.close()
 
 
 
@@ -77,10 +72,10 @@ def find_representative_sequence():
     if not os.path.exists(direc):
         os.mkdir(direc)
 
-    for cont_ in countries:
+    for country in countries:
         global dataset,method
         
-        dataset = cont_.split("_")[0]
+        dataset = country.split("_")[0]
         method = "Represtative_seq"
 
         csv_file = main_direc +"/"+dataset+"_distance_matrix.csv"
@@ -88,15 +83,15 @@ def find_representative_sequence():
         matrix = pd.read_csv(csv_file)
  
         if(matrix.shape[0] == 1):
-            info_handle = open(direc+"/"+dataset+"_center.txt","w")
-            info_handle.write(matrix.columns[0])
-            info_handle.close()
+            clusters = open(direc+"/"+dataset+"_center.txt","w")
+            clusters.write(matrix.columns[0])
+            clusters.close()
             continue
+            
         num_clusters = 1
         
         df = PCA_on_distance_matrix(matrix)
-        num_seqs = matrix.shape[0]
-        clustering(matrix.copy().columns,df,num_seqs,num_clusters)
+        clustering(matrix.copy().columns,df,num_clusters)
         
 
 if __name__ == '__main__':

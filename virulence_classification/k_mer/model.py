@@ -67,7 +67,7 @@ def LGBM():
     clf = LGBMClassifier(objective='binary')
 
     grid_params = {
-    'learning_rate': [ 0.01, 0.05],
+    'learning_rate': [0.001, 0.01, 0.05],
     'num_leaves': [50,100],
     'max_depth' : [5,10,15],
     'min_data_in_leaf':[5, 10]

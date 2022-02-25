@@ -20,19 +20,19 @@ def gap_features(df, nucleotides, max_gap = 30):
             for x2 in nucleotides:
                 col_name = 'GAP_' + x1 + '_' + str(i) + '_' + x2
                 result[col_name] = pd.Series(data=(df.shape[0] * [0])).astype(np.int32)
-                idx = 0
+                index = 0
                 for RNA in df['Sequence']:
-                    cnt = 0
+                    count = 0
                     for j in range(len(RNA) - (i + 1)):
                         if RNA[j] == x1 and RNA[j + i + 1] == x2:
-                            cnt += 1
-                    result[col_name].at[idx] = np.int32(cnt)
-                    idx += 1
+                            count += 1
+                    result[col_name].at[index] = np.int32(count)
+                    index += 1
 
     return result
 
 
-def position_independent(df, order, nucleotides, other_nucleotides):
+def position_independent(df, order, nucleotides):
     '''
     Calculate the number of occcurence of k-mer with the length of k
     Input: dataframe, order, nucleotides
@@ -45,19 +45,11 @@ def position_independent(df, order, nucleotides, other_nucleotides):
         for p in itertools.product(nucleotides, repeat=ord_):
             p = ''.join(p)
             result[p] = pd.Series(data=(df.shape[0] * [0])).astype(np.int32)
-            idx = 0
+            index = 0
             for RNA in df['Sequence']:
-                cnt = RNA.count(p)
-                result[p].at[idx] = np.int16(cnt)
-                idx += 1
-
-    for p in other_nucleotides:
-        result[p] = pd.Series(data=(df.shape[0] * [0])).astype(np.int32)
-        idx = 0
-        for RNA in df['Sequence']:
-            cnt = RNA.count(p)
-            result[p].at[idx] = np.int32(cnt)
-            idx += 1
+                count = RNA.count(p)
+                result[p].at[index] = np.int16(count)
+                index += 1
 
     return result
 
@@ -85,15 +77,15 @@ def position_specific(df, order, nucleotides, max_length=30000):
         p = 'pos_' + str(order*i) + '_' + str(order*(i+1)-1)
         result[p] = pd.Series(data=(df.shape[0] * [0])).astype(np.int32)
 
-    idx = 0
+    index = 0
     for RNA in df['Sequence']:
         length = len(RNA)
         for i in range(0, min(length, max_length), order):
             substr = RNA[i:i+order]
             p = 'pos_' + str(i) + '_' + str(i + order - 1)
             if substr in subseq_dict:
-                result[p].at[idx] = np.int32(subseq_dict[substr])
-        idx += 1
+                result[p].at[index] = np.int32(subseq_dict[substr])
+        index += 1
 
 
     return result
@@ -113,14 +105,13 @@ def generate_features(df, filename=''):
         os.makedirs(dir)
 
     nucleotides_ = ['A', 'C', 'T', 'G']
-    iupac_neucleotides = []
 
     df['Sequence'] = df['Sequence'].str.upper()
 
     print('Data Shape: ', df.shape)
 
     print("Generating features of independent position")
-    df_pos_ind = position_independent(df, 4, nucleotides_, iupac_neucleotides).astype(np.int32)
+    df_pos_ind = position_independent(df, 4, nucleotides_).astype(np.int32)
 
 
     print("Generating features of specific position")

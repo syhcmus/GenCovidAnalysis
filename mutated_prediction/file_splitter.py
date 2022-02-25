@@ -17,18 +17,18 @@ def split_by_country(df):
     for country in loc:
         tokens = country.split('/')
         if 'USA' not in country:
-            cont_ = country.split('/')[1].strip()
+            country = country.split('/')[1].strip()
         elif len(tokens) == 2:
-            cont_ = country.split('/')[1].strip()
+            country = country.split('/')[1].strip()
         else:
-            cont_ = country.split('/')[2].strip()
+            country = country.split('/')[2].strip()
 
-        if cont_ == 'New York City':
-            cont_ = 'New York'
+        if country == 'New York City':
+            country = 'New York'
        
         
-        if cont_ not in countries:
-            countries.append(cont_)
+        if country not in countries:
+            countries.append(country)
 
     countries.sort()
 
@@ -56,10 +56,10 @@ def file_spliter():
         os.mkdir(direc)
 
     
-    for cont_ in countries:
-        n_df = df.loc[df["Location"].str.contains(cont_)]
-        f_name = direc+"/"+cont_+".csv"
-        n_df.to_csv(f_name,index=False)
+    for country in countries:
+        countries_df = df.loc[df["Location"].str.contains(country)]
+        f_name = direc+"/"+country+".csv"
+        countries_df.to_csv(f_name,index=False)
 
 
 if __name__ == "__main__":

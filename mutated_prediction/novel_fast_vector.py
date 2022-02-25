@@ -4,79 +4,42 @@ import numpy as np
 import pandas as pd
 from collections import Counter
 
-def encode(seq,change_map):
+def encode(seq,encode_map):
     '''
     Encode sequence
     Input: sequence to encode, map to encode
     Output: sequence after encoded
     '''
-    n_seq = []
-    for base in seq:
-        if base in change_map:
-            n_seq.append(change_map[base])
-    
-    assert len(seq) == len(n_seq)
+    final_sequence = []
+    for nucleotide in seq:
+        if nucleotide in encode_map:
+            final_sequence.append(encode_map[nucleotide])
 
-    return n_seq
+    return final_sequence
 
-def R_Y_coding(seq):
+
+def nucleotide_coding(seq,encode_map):
     '''
-    Encode base to R or Y
-    Input: Sequence to encode
-    Output: Sequence after encoded
-    '''
-
-    change_map = {'A':'R','G':'R','C':'Y','T':'Y'}
-    
-    n_seq = encode(seq,change_map)
-    _,count = np.unique(n_seq,return_counts=True)
-    n_r = count[0]
-    n_y = count[1]
-    ry_encode_seq = ''.join(n_seq)
-
-    return (ry_encode_seq,n_r,n_y)
-
-def M_K_coding(seq):
-
-    '''
-    Encode base to M or K
+    Encode nucleotide
     Input: Sequence to encode
     Output: Sequence after encoded
     '''
     
-    change_map = {'A':'M','G':'K','C':'M','T':'K'}
+    final_sequence = encode(seq,encode_map)
+    _,count = np.unique(final_sequence,return_counts=True)
+    nucleotide_0 = count[0]
+    nucleotide_1 = count[1]
+    encode_seq = ''.join(final_sequence)
 
-    n_seq = encode(seq,change_map)
-    counts = Counter(n_seq)
-    n_m = counts['M']
-    n_k = counts['K']
-    mk_encode_seq = ''.join(n_seq)
+    return (encode_seq,nucleotide_0,nucleotide_1)
 
-    return (mk_encode_seq,n_m,n_k)
 
-def S_W_coding(seq):
-
-    '''
-    Encode base to S or W
-    Input: Sequence to encode
-    Output: Sequence after encoded
-    '''
-
-    change_map = {'A':'W','G':'S','C':'S','T':'W'}
-
-    n_seq = encode(seq,change_map)
-    counts = Counter(n_seq)
-    n_s = counts['S']
-    n_w = counts['W']
-    sw_encode_seq = ''.join(n_seq)
-
-    return (sw_encode_seq,n_s,n_w)
 
 def get_mean_position(seq,n,c):
     '''
-    Get mean position of base in sequence
-    Input: Sequence,number of base ,base
-    Output: mean position of base
+    Get mean position of nucleotide in sequence
+    Input: Sequence,number of nucleotide ,nucleotide
+    Output: mean position of nucleotide
     '''
 
     length = len(seq)
@@ -90,9 +53,9 @@ def get_mean_position(seq,n,c):
 
 def get_variance(seq,n,meu,c):
     '''
-    Get variance of base in sequence
-    Input: sequence,number of base ,base
-    Output: variance of base
+    Get variance of nucleotide in sequence
+    Input: sequence,number of nucleotide ,nucleotide
+    Output: variance of nucleotide
     '''
 
     length = len(seq)
@@ -110,9 +73,14 @@ def get_NFV(seq):
     Output: novel fast vector
     '''
 
-    (ry_encode_seq,n_r,n_y)  = R_Y_coding(seq)
-    (mk_encode_seq,n_m,n_k) = M_K_coding(seq)
-    (sw_encode_seq,n_s,n_w) = S_W_coding(seq)
+    R_Y_encode_map = {'A':'R','G':'R','C':'Y','T':'Y'}
+    M_K_encode_map = {'A':'M','G':'K','C':'M','T':'K'}
+    S_K_encode_map = {'A':'W','G':'S','C':'S','T':'W'}
+
+
+    (ry_encode_seq,n_r,n_y)  = nucleotide_coding(seq,R_Y_encode_map)
+    (mk_encode_seq,n_m,n_k) = nucleotide_coding(seq,M_K_encode_map)
+    (sw_encode_seq,n_s,n_w) = nucleotide_coding(seq,S_K_encode_map)
 
     meu_r = get_mean_position(ry_encode_seq,n_r,'R')
     meu_y = get_mean_position(ry_encode_seq,n_y,'Y')
@@ -133,21 +101,9 @@ def get_NFV(seq):
     D_w = get_variance(sw_encode_seq,n_w,meu_w,'W')
     
     Fast_vector = [n_r,meu_r,D_r,n_y,meu_y,D_y,n_m,meu_m,D_m,n_k,meu_k,D_k,n_s,meu_s,D_s,n_w,meu_w,D_w]
-    assert len(Fast_vector) == 18
 
     return Fast_vector
 
-def minkowski(list_,seqs_number,exponent): 
-    '''
-    Calculate minkowski distance between sequence
-    Input: list of sequence, sequence number, number of sequence
-    Output: matrix of distance
-    '''
-    matrix = np.zeros([seqs_number, seqs_number])
-    for i, j in itertools.combinations(range(0,seqs_number),2):
-         matrix[i][j]= matrix [j][i] = np.linalg.norm((list_[i,:]-list_[j,:]),ord=exponent)
-  
-    return matrix
 
 def euclidean(list_,seqs_number):
     '''
@@ -155,7 +111,13 @@ def euclidean(list_,seqs_number):
     Input: list of sequence, sequence number
     Output: matrix of sequence
     '''
-    return minkowski(list_,seqs_number,2)
+
+    matrix = np.zeros([seqs_number, seqs_number])
+    for i, j in itertools.combinations(range(0,seqs_number),2):
+        matrix[i][j] = matrix [j][i] = np.linalg.norm((list_[i,:]-list_[j,:]),ord=2)
+  
+    return matrix
+   
 
 def create_vects_and_country_wise_distance_matrix():
     '''
@@ -188,20 +150,21 @@ def create_vects_and_country_wise_distance_matrix():
     
 
         acc_vects = np.array(final_list)
-        cont_ = np.array(acc_vects)
+        country = np.array(acc_vects)
         
-        ID_arr = df["Accession ID"]
-        ID_col = pd.Series(ID_arr)
-        Vector_col = pd.Series(cont_.tolist())
-        frame = {'Accession ID': ID_col,'Vector':Vector_col}
-        df_final = pd.DataFrame(frame)
-        direc_1 = "data/All_Countries_NFV_Vects"
-        df_final.to_csv(direc_1+"/"+c_name+"_Novel_Fast_Vector.csv",index=False)
-        direc_2 = "data/All_Countries_Distance_Matrix"
-        matrix = euclidean(cont_,len(cont_))
+        id_list = df["Accession ID"]
+        id_col = pd.Series(id_list)
+        vector_col = pd.Series(country.tolist())
 
-        final_df = pd.DataFrame(matrix,columns=ID_arr)
-        final_df.to_csv(direc_2+"/"+c_name+"_distance_matrix.csv",index=False)
+        df1 = pd.DataFrame({'Accession ID': id_col,'Vector':vector_col})
+
+        direc_1 = "data/All_Countries_NFV_Vects"
+        df1.to_csv(direc_1+"/"+c_name+"_Novel_Fast_Vector.csv",index=False)
+        direc_2 = "data/All_Countries_Distance_Matrix"
+        matrix = euclidean(country,len(country))
+
+        df2 = pd.DataFrame(matrix,columns=id_list)
+        df2.to_csv(direc_2+"/"+c_name+"_distance_matrix.csv",index=False)
 
 
 

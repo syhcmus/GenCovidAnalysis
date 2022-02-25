@@ -12,12 +12,12 @@ def read_fasta(input_fasta):
     Output: dictionary
     '''
 
-    id_seq_map = {}
-    for seq_record in SeqIO.parse(input_fasta,"fasta"):
-        id_ = seq_record.description.split("|")[1]
-        id_seq_map[id_] = str(seq_record.seq)
+    sequence_map = {}
+    for sequence_record in SeqIO.parse(input_fasta,"fasta"):
+        sequence_id = sequence_record.description.split("|")[1]
+        sequence_map[sequence_id] = str(sequence_record.seq)
 
-    return id_seq_map
+    return sequence_map
 
 def processing(label_name_file,original_df,Label):
     '''
@@ -26,42 +26,40 @@ def processing(label_name_file,original_df,Label):
     Output: dataframe 
     '''
 
-    # label_helper_df = pd.read_csv("Dataset_Labelling_Helper.csv")
-    label_helper_df = pd.read_csv(label_name_file)
+    label_df = pd.read_csv(label_name_file)
     original_df = original_df.dropna()
 
     locations = original_df["Location"]
-    countries = label_helper_df["Countries"]
-    deaths = label_helper_df["Death"]
+    countries = label_df["Countries"]
+    deaths = label_df["Death"]
 
-    ind_ = "Indicator_" + Label
-    indicator = label_helper_df[ind_]
+    indicator_col = f"Indicator_{Label}"
+    indicator = label_df[indicator_col]
 
     death_arr = np.full(locations.shape[0],-1)
     indicator_arr = np.full(locations.shape[0],-1)
 
 
-    for l_idx,l_value in enumerate(locations):
-        l_value = str(l_value).split("/")
-        for c_idx,c_value in enumerate(countries):
-
-            if(c_value in str(l_value).encode('ascii', 'ignore').decode('ascii')):
-                death_arr[l_idx] = deaths[c_idx]
-                indicator_arr[l_idx] = indicator[c_idx]
+    for location_index,location_value in enumerate(locations):
+        location_value = str(location_value).split("/")
+        for country_index,country_value in enumerate(countries):
+            if(country_value in str(location_value).encode('ascii', 'ignore').decode('ascii')):
+                death_arr[location_index] = deaths[country_index]
+                indicator_arr[location_index] = indicator[country_index]
 
     original_df["Death"] = death_arr
     original_df["Indicator"] = indicator_arr
 
     permitted_label = [0,1]
-    good_df = original_df.loc[original_df["Indicator"].isin(permitted_label)]
+    final_df = original_df.loc[original_df["Indicator"].isin(permitted_label)]
 
     file_name = f"./input/dataset_labelled_by_{Label}.csv"
-    good_df.to_csv(file_name,index=False)
+    final_df.to_csv(file_name,index=False)
 
-    return good_df
+    return final_df
 
 
-def change_seq(sequence):
+def change_sequence(sequence):
     '''
     Helper function for change sequences
     Input: sequence
@@ -69,7 +67,7 @@ def change_seq(sequence):
     '''
 
     
-    change_map = {
+    sequence_map = {
         "R":["A","G"],
         "Y":["C","T"],
         "S":["C","G"],
@@ -82,29 +80,27 @@ def change_seq(sequence):
         "V":["C","A","G"],
         "N":["A","C","T","G"]
     }
-    keys = change_map.keys()
+    keys = sequence_map.keys()
 
     
-
     seq = sequence.upper()
     seq = seq.replace("-","")
     
     mutate_seq = [c for c in seq]
     for i in range(len(seq)):
         if(seq[i] in keys):
-            mutate_seq[i] = random.choice(change_map[seq[i]])
+            mutate_seq[i] = random.choice(sequence_map[seq[i]])
 
-    unique = np.unique(mutate_seq)
+    unique_nucleotide = np.unique(mutate_seq)
     permitted_list = ['A','C','G','T']
-    if(len(unique) != 4):
-        nucleotide_omitted = [x for x in unique if x not in permitted_list]
-        for one_by_one in nucleotide_omitted:
-            mutate_seq = list(filter((one_by_one).__ne__, mutate_seq))
+    if(len(unique_nucleotide) != 4):
+        omitted_nucleotide = [nucleotide for nucleotide in unique_nucleotide if nucleotide not in permitted_list]
+        for nucleotide in omitted_nucleotide:
+            mutate_seq = list(filter((nucleotide).__ne__, mutate_seq))
     
+    final_sequence = ''.join(mutate_seq)
 
-    n_sequence = ''.join(mutate_seq)
-
-    return n_sequence
+    return final_sequence
 
 def change_and_check_sequences(sequences):
     '''
@@ -114,44 +110,39 @@ def change_and_check_sequences(sequences):
     '''
     
 
-    n_sequence = []
+    final_sequence = []
     for seq in sequences:
 
         s = set(seq)
-        if(len(s)!=4):
-            n_seq = change_seq(seq)
-            n_sequence.append(n_seq)
+        if len(s) != 4:
+            n_seq = change_sequence(seq)
+            final_sequence.append(n_seq)
         else:
-            n_sequence.append(seq)
+            final_sequence.append(seq)
 
-    for seq in n_sequence:
-        s = set(seq)
    
-    return n_sequence
+    return final_sequence
 
-def data_preparation(id_seq_map,info_file,label_method,label_helper_file):
+def data_preparation(sequence_map,info_file,label_method,label_helper_file):
     '''
     Creates dataset labeled by the label method provided
     Input: dictionary, the info_file name and the label name
     Output: None
     '''
 
+    id_list = list(sequence_map.keys())
     cols = ["Accession ID","Virus name","Location","Collection date"]
     info_df = pd.read_csv(info_file)
-
-    id_list = list(id_seq_map.keys())
-    usable_info_df = info_df.loc[info_df["Accession ID"].isin(id_list)]
-    usable_info_df = usable_info_df[cols]
-
-    usable_info_df['Sequence'] = usable_info_df['Accession ID'].map(id_seq_map) # Embedding Sequences in the csv file
-    sequences = np.array(usable_info_df['Sequence'])
-    usable_info_df['Sequence'] = change_and_check_sequences(sequences.copy()) # Interpreting the symbols
+    info_df = info_df.loc[info_df["Accession ID"].isin(id_list)][cols]
+    info_df['Sequence'] = info_df['Accession ID'].map(sequence_map) 
+    sequences = np.array(info_df['Sequence'])
+    info_df['Sequence'] = change_and_check_sequences(sequences.copy()) 
     
 
-    all_df =  processing(label_helper_file,usable_info_df,label_method)
-    y = all_df["Indicator"]
+    df =  processing(label_helper_file,info_df,label_method)
+    y = df["Indicator"]
 
-    train, test = train_test_split(all_df, test_size=0.2,stratify=y, random_state=0)
+    train, test = train_test_split(df, test_size=0.2,stratify=y, random_state=0)
     train.to_csv("./input/train.csv", index=False)
     test.to_csv("./input/test.csv", index=False)
 
@@ -168,8 +159,8 @@ def main():
     if not os.path.exists('input'):
         os.mkdir('input')
 
-    id_seq_map = read_fasta(input_fasta)
-    data_preparation(id_seq_map,info_file,label,label_helper_file)
+    sequence_map = read_fasta(input_fasta)
+    data_preparation(sequence_map,info_file,label,label_helper_file)
 
     
 

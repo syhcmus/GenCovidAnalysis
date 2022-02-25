@@ -26,9 +26,7 @@ N_EPOCHS = 100
 
 
 direc = INPUT_FOLDER+"All_Countries_Representative_Seq"
-Fast_Vector_direc = INPUT_FOLDER+"All_Countries_NFV_Vects"
-Other_Info_File = './../input/dataset_labelled_by_Death.csv'
-
+info_file = './../input/dataset_labelled_by_Death.csv'
 all_cluster_direc = INPUT_FOLDER+"All_Clusters"
 
 
@@ -58,7 +56,7 @@ class Seq_Wrapper:
         '''
         return self.seq
 
-    def set_indi(self,indicator):
+    def set_indicator(self,indicator):
       self.indicator = indicator
 
 def formatter(date_):
@@ -80,10 +78,10 @@ def info_sequencer(cluster_file,country,start,end):
     global date_country_map
 
     print("Working with cluster", cluster_file)
-    c_fl = open(cluster_file,"r")
-    id_list = c_fl.read().split("\n")
-    Other_Info_df = pd.read_csv(Other_Info_File)
-    final_df = Other_Info_df.loc[Other_Info_df["Accession ID"].isin(id_list)]
+    cluster_files = open(cluster_file,"r")
+    id_list = cluster_files.read().split("\n")
+    info_df = pd.read_csv(info_file)
+    final_df = info_df.loc[info_df["Accession ID"].isin(id_list)]
     final_cols = ["Accession ID","Virus name","Location","Collection date","Death","Sequence"]
     final_df = final_df[final_cols]
 
@@ -105,8 +103,8 @@ def file_name_formatter(cluster_file):
     Output: file name of country after being formatted
     '''
     if(cluster_file.startswith("USA")):
-        bleh = cluster_file.split("_")
-        country = bleh[0] + "_" + bleh[1]
+        tokens = cluster_file.split("_")
+        country = tokens[0] + "_" + tokens[1]
     else:
         country = cluster_file.split("_")[0]
 
@@ -259,7 +257,7 @@ def make_sequence(texts,
     num_words = len(word_idx) + 1
 
 
-    print(f'There are {num_words} unique words.')
+    print(f'There are {num_words} unique sequence.')
 
     sequences = tokenizer.texts_to_sequences(texts)
 
@@ -480,11 +478,11 @@ def prepare_data(start,end,single_position):
         if date.date() not in date_country_map:
             date_country_map[date.date()] = same_date_df["Country"].values
 
-    dub = date_country_map
-    date_country_map = collections.OrderedDict(sorted(dub.items()))
+    temp = date_country_map
+    date_country_map = collections.OrderedDict(sorted(temp.items()))
 
 
-    Other_df = pd.read_csv(Other_Info_File)
+    info_df = pd.read_csv(info_file)
     for point in date_country_map:
         country_list = date_country_map[point]
         final_input_map[point] = {}
@@ -492,6 +490,7 @@ def prepare_data(start,end,single_position):
         for country in country_list:
             if(country == "USA"):
                 continue
+
             s_name = country
             d_name = country
             if(country == "Korea" or country == "South Korea"):
@@ -499,11 +498,10 @@ def prepare_data(start,end,single_position):
             if(country == "England" or country == "United Kingdom"):
                 d_name = "United Kingdom"
             
-            temp_ = Other_df.loc[Other_df["Location"].str.contains(s_name)]
+            temp_ = info_df.loc[info_df["Location"].str.contains(s_name)]
 
             if(len(temp_) == 0):
                 continue
-            
         
             if(d_name not in final_input_map[point]):
                 final_input_map[point][d_name] = True   
@@ -513,7 +511,6 @@ def prepare_data(start,end,single_position):
         if(len(final_input_map[point]) == 0):
             del date_country_map[point] 
         
-
 
     for key in date_country_map:
         key = key.strftime("%d_%m_%Y")
@@ -530,8 +527,8 @@ def prepare_data(start,end,single_position):
     for cluster_file in file_list:
         if(cluster_file.endswith("txt")):
             if(cluster_file.startswith("USA")):
-                bleh = cluster_file.split("_")
-                num = bleh[0] + "_" + bleh[1]
+                tokens = cluster_file.split("_")
+                num = tokens[0] + "_" + tokens[1]
             else:
                 num = cluster_file.split("_")[0]
 
@@ -539,11 +536,11 @@ def prepare_data(start,end,single_position):
 
 
     for point in final_input_map:
-        for small_clust in final_input_map[point]:
-            print(point,small_clust,len(final_input_map[point][small_clust]))
+        for small_cluster in final_input_map[point]:
+            print(point,small_cluster,len(final_input_map[point][small_cluster]))
 
-    dub = final_input_map
-    final_input_map = collections.OrderedDict(sorted(dub.items()))
+    temp = final_input_map
+    final_input_map = collections.OrderedDict(sorted(temp.items()))
 
 
     keys = list(date_country_map.keys())
@@ -581,7 +578,7 @@ def prepare_data(start,end,single_position):
                 if final_input_map[date][current_country][i].get_indicator() == 0:
                     seq_idx = i
                   
-                    final_input_map[date][current_country][i].set_indi(1)
+                    final_input_map[date][current_country][i].set_indicator(1)
                     break
             if seq_idx == -1:
                 seq_idx = randrange(total_seq) 
